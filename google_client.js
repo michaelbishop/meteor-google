@@ -30,10 +30,10 @@ Google.requestCredential = function (options, credentialRequestCompleteCallback)
   scope = _.union(scope, requiredScope);
   var flatScope = _.map(scope, encodeURIComponent).join('+');
 
-  // https://developers.google.com/accounts/docs/OAuth2WebServer#formingtheurl
   var accessType = options.requestOfflineToken ? 'offline' : 'online';
-  var approvalPrompt = options.forceApprovalPrompt ? 'force' : 'auto';
 
+  // Google Oath2 Login Options
+  // https://developers.google.com/accounts/docs/OAuth2Login
   var loginUrl =
         'https://accounts.google.com/o/oauth2/auth' +
         '?response_type=code' +
@@ -41,8 +41,11 @@ Google.requestCredential = function (options, credentialRequestCompleteCallback)
         '&scope=' + flatScope +
         '&redirect_uri=' + Meteor.absoluteUrl('_oauth/google?close') +
         '&state=' + credentialToken +
-        '&access_type=' + accessType +
-        '&approval_prompt=' + approvalPrompt;
+        '&access_type=' + accessType;
+
+  if (typeof Accounts._options.promptType === 'string') {
+    loginUrl += '&prompt=' + encodeURIComponent(Accounts._options.promptType);
+  }
 
   // Use Google's domain-specific login page if we want to restrict creation to
   // a particular email domain. (Don't use it if restrictCreationByEmailDomain
@@ -52,6 +55,8 @@ Google.requestCredential = function (options, credentialRequestCompleteCallback)
   if (typeof Accounts._options.restrictCreationByEmailDomain === 'string') {
     loginUrl += '&hd=' + encodeURIComponent(Accounts._options.restrictCreationByEmailDomain);
   }
+
+console.log('XXXXXXX Login URL XXXXXXX\n', loginUrl );
 
   Oauth.initiateLogin(credentialToken,
                       loginUrl,
